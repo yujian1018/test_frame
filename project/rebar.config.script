@@ -1,0 +1,18 @@
+{ok, [Terms]} = file:consult("project.config"),
+{d, process_call_mod, Mod} = lists:keyfind('process_call_mod', 2, Terms),
+IsDebug =
+    case lists:keyfind('debug', 2, Terms) of
+        {d, debug} -> {d, debug};
+        false -> {d, product}
+    end,
+{erl_opts, Opts} = lists:keyfind(erl_opts, 1, CONFIG),
+NewOpts =
+    case os:type() of
+        {unix,linux} ->
+            [native, {d, linux}]++Opts;
+        _ ->
+            [{d, windows}]++Opts
+    end,
+lists:keyreplace(erl_opts, 1, CONFIG, {erl_opts, [
+    {d, process_call_mod, Mod},
+    IsDebug|NewOpts]}).
